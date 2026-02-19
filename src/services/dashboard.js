@@ -189,7 +189,7 @@ export const startDashboard = (client) => {
         });
     });
 
-    app.listen(PORT, () => {
-        console.log(`🚀 Dashboard rodando em http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Dashboard rodando na porta ${PORT} (0.0.0.0)`);
     });
 };
