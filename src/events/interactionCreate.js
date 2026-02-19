@@ -290,5 +290,73 @@ export async function execute(interaction) {
                 });
             }
         }
+
+        if (interaction.customId.startsWith('product_variation_select_')) {
+            const productId = parseInt(interaction.customId.split('_')[3]);
+            const variationName = interaction.values[0];
+            const product = db.getProduct(productId);
+            const variation = product.variations.find(v => v.name === variationName);
+
+            if (!variation) return interaction.reply({ content: 'Variação não encontrada.', ephemeral: true });
+
+            await interaction.deferReply({ ephemeral: true });
+
+            // Criar pedido para esta variação específica
+            const order = {
+                id: db.orders.length > 0 ? Math.max(...db.orders.map(o => o.id)) + 1 : 1,
+                userId: interaction.user.id,
+                username: interaction.user.username,
+                items: [{
+                    productId: product.id,
+                    name: `${product.name} (${variation.name})`,
+                    price: variation.price,
+                    quantity: 1,
+                    subtotal: variation.price,
+                    content: variation.content || product.content,
+                    roleId: variation.roleId || product.roleId
+                }],
+                total: variation.price,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            db.orders.push(order);
+            await db.save();
+
+            // Gerar Pagamento (Mock de PIX por enquanto, integrado com services/payment.js se existir)
+            const { createPayment } = await import('../services/payment.js').catch(() => ({ createPayment: null }));
+
+            let paymentEmbed = new EmbedBuilder()
+                .setTitle('💳 Checkout - Pagamento')
+                .setDescription(`Você selecionou: **${product.name} (${variation.name})**\nValor: **R$ ${variation.price.toFixed(2)}**`)
+                .setColor(config.colors.warning)
+                .setTimestamp();
+
+            if (createPayment) {
+                try {
+                    const payment = await createPayment(order.id, variation.price, 'pix', interaction.user.id);
+
+                    paymentEmbed.addFields(
+                        { name: '💠 PIX Copia e Cola', value: `\`\`\`${payment.pixCode}\`\`\`` },
+                        { name: '⚠️ Aviso', value: 'O pagamento é processado automaticamente. Assim que aprovado, você receberá o produto na sua DM.' }
+                    );
+
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`copy_pix_${payment.id}`)
+                            .setLabel('Copiar PIX')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setEmoji('📋')
+                    );
+
+                    return interaction.editReply({ embeds: [paymentEmbed], components: [row] });
+                } catch (e) {
+                    console.error('Erro ao gerar pagamento:', e);
+                }
+            }
+
+            paymentEmbed.setDescription('Erro ao gerar o PIX. Entre em contato com um administrador.');
+            return interaction.editReply({ embeds: [paymentEmbed] });
+        }
     }
 }

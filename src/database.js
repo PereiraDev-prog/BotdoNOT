@@ -93,7 +93,12 @@ class Database {
             ? Math.max(...this.products.map(p => p.id)) + 1
             : 1;
 
-        const newProduct = { id, ...product, createdAt: new Date().toISOString() };
+        const newProduct = {
+            id,
+            ...product,
+            variations: product.variations || [],
+            createdAt: new Date().toISOString()
+        };
         this.products.push(newProduct);
         this.save();
         return newProduct;

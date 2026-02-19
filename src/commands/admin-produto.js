@@ -42,6 +42,11 @@ export const data = new SlashCommandBuilder()
                     .setDescription('Cargo a ser dado após a compra')
                     .setRequired(false)
             )
+            .addStringOption(option =>
+                option.setName('thumbnail')
+                    .setDescription('URL da imagem do produto')
+                    .setRequired(false)
+            )
     )
     .addSubcommand(subcommand =>
         subcommand
@@ -99,6 +104,51 @@ export const data = new SlashCommandBuilder()
         subcommand
             .setName('listar')
             .setDescription('Listar todos os produtos')
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('variacao-adicionar')
+            .setDescription('Adicionar uma variação (ex: 1 Dia) a um produto')
+            .addIntegerOption(option =>
+                option.setName('produto-id')
+                    .setDescription('ID do produto pai')
+                    .setRequired(true)
+            )
+            .addStringOption(option =>
+                option.setName('nome')
+                    .setDescription('Nome da variação (Ex: 1 Dia, Permanente)')
+                    .setRequired(true)
+            )
+            .addNumberOption(option =>
+                option.setName('preco')
+                    .setDescription('Preço da variação')
+                    .setRequired(true)
+            )
+            .addStringOption(option =>
+                option.setName('conteudo')
+                    .setDescription('Conteúdo para esta variação')
+                    .setRequired(false)
+            )
+            .addRoleOption(option =>
+                option.setName('cargo')
+                    .setDescription('Cargo para esta variação')
+                    .setRequired(false)
+            )
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('variacao-remover')
+            .setDescription('Remover uma variação de um produto')
+            .addIntegerOption(option =>
+                option.setName('produto-id')
+                    .setDescription('ID do produto')
+                    .setRequired(true)
+            )
+            .addStringOption(option =>
+                option.setName('nome')
+                    .setDescription('Nome da variação para remover')
+                    .setRequired(true)
+            )
     );
 
 export async function execute(interaction) {
@@ -111,14 +161,17 @@ export async function execute(interaction) {
         const stock = interaction.options.getInteger('estoque');
         const contentStr = interaction.options.getString('conteudo');
         const role = interaction.options.getRole('cargo');
+        const thumbnail = interaction.options.getString('thumbnail');
 
         const product = db.addProduct({
             name,
-            description,
+            description: description.replace(/\\n/g, '\n'),
             price,
             stock,
             content: contentStr,
-            roleId: role?.id
+            roleId: role?.id,
+            thumbnail,
+            variations: [] // Will start empty and can be added later
         });
 
         const embed = new EmbedBuilder()
@@ -224,5 +277,50 @@ export async function execute(interaction) {
         });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (subcommand === 'variacao-adicionar') {
+        const productId = interaction.options.getInteger('produto-id');
+        const name = interaction.options.getString('nome');
+        const price = interaction.options.getNumber('preco');
+        const content = interaction.options.getString('conteudo');
+        const role = interaction.options.getRole('cargo');
+
+        const product = db.getProduct(productId);
+        if (!product) return interaction.reply({ content: 'Produto não encontrado!', ephemeral: true });
+
+        if (!product.variations) product.variations = [];
+
+        product.variations.push({
+            name,
+            price,
+            content,
+            roleId: role?.id
+        });
+
+        await db.save();
+
+        return interaction.reply({
+            content: `${config.emojis.check} Variação **${name}** adicionada ao produto **${product.name}**!`,
+            ephemeral: true
+        });
+    }
+
+    if (subcommand === 'variacao-remover') {
+        const productId = interaction.options.getInteger('produto-id');
+        const name = interaction.options.getString('nome');
+
+        const product = db.getProduct(productId);
+        if (!product) return interaction.reply({ content: 'Produto não encontrado!', ephemeral: true });
+
+        if (product.variations) {
+            product.variations = product.variations.filter(v => v.name !== name);
+            await db.save();
+        }
+
+        return interaction.reply({
+            content: `${config.emojis.check} Variação **${name}** removida de **${product.name}**!`,
+            ephemeral: true
+        });
     }
 }
