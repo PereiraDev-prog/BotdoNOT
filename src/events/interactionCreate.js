@@ -326,38 +326,57 @@ export async function execute(interaction) {
             // Gerar Pagamento (Mock de PIX por enquanto, integrado com services/payment.js se existir)
             const { createPayment } = await import('../services/payment.js').catch(() => ({ createPayment: null }));
 
-            let paymentEmbed = new EmbedBuilder()
-                .setTitle('💳 Checkout - Pagamento')
-                .setDescription(`Você selecionou: **${product.name} (${variation.name})**\nValor: **R$ ${variation.price.toFixed(2)}**`)
-                .setColor(config.colors.warning)
-                .setTimestamp();
-
             if (createPayment) {
                 try {
                     const payment = await createPayment(order.id, interaction.user.id, 'pix', variation.price);
 
-                    paymentEmbed.addFields(
-                        { name: '💠 PIX Copia e Cola', value: `\`\`\`${payment.pixCode}\`\`\`` },
-                        { name: '⚠️ Aviso', value: 'O pagamento é processado automaticamente. Assim que aprovado, você receberá o produto na sua DM.' }
-                    );
+                    const embedPay = new EmbedBuilder()
+                        .setTitle('💳 Checkout - Pagamento')
+                        .setDescription(`Você selecionou: **${product.name} (${variation.name})**\nValor a pagar: **R$ ${variation.price.toFixed(2)}**`)
+                        .addFields(
+                            { name: '💠 PIX Copia e Cola', value: `\`\`\`${payment.pixCode}\`\`\`` },
+                            { name: '📱 QR Code', value: 'Escaneie a imagem abaixo para pagar:' },
+                            { name: '⚠️ Aviso Importante', value: 'O pagamento é processado automaticamente. Logo após a aprovação, seu produto será enviado nas suas DMs.' }
+                        )
+                        .setColor('#0099ff')
+                        .setTimestamp();
 
-                    const row = new ActionRowBuilder().addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(`copy_pix_${payment.id}`)
-                            .setLabel('Copiar PIX')
-                            .setStyle(ButtonStyle.Secondary)
-                            .setEmoji('📋')
-                    );
+                    const components = [
+                        new ActionRowBuilder().addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`copy_pix_${payment.id}`)
+                                .setLabel('Copiar PIX')
+                                .setStyle(ButtonStyle.Secondary)
+                                .setEmoji('📋')
+                        )
+                    ];
 
-                    return interaction.editReply({ embeds: [paymentEmbed], components: [row] });
+                    const files = [];
+
+                    if (payment.pixQRCode) {
+                        try {
+                            const buffer = Buffer.from(payment.pixQRCode, 'base64');
+                            const attachment = new AttachmentBuilder(buffer, { name: 'qrcode.png' });
+                            embedPay.setImage('attachment://qrcode.png');
+                            files.push(attachment);
+                        } catch (err) {
+                            console.error('Erro ao converter QR Code:', err);
+                        }
+                    }
+
+                    return interaction.editReply({ embeds: [embedPay], components, files });
                 } catch (e) {
                     console.error('Erro ao gerar pagamento:', e);
                 }
             }
 
-            paymentEmbed.setDescription('Erro ao gerar o PIX. Entre em contato com um administrador.');
-            paymentEmbed.setColor(config.colors.error);
-            return interaction.editReply({ embeds: [paymentEmbed] });
+            const errorEmbed = new EmbedBuilder()
+                .setTitle('❌ Erro no Pagamento')
+                .setDescription('Erro ao gerar o PIX. Entre em contato com um administrador.')
+                .setColor('#ff0000')
+                .setTimestamp();
+
+            return interaction.editReply({ embeds: [errorEmbed] });
         }
     }
 }
