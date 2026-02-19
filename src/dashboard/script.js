@@ -189,23 +189,41 @@ async function updateOrderStatus(id, status) {
 // Config
 async function loadConfig() {
     const config = await apiRequest('/api/config');
-    document.getElementById('config-welcome-msg').value = config.welcome?.message || '';
+
+    // Welcome
+    document.getElementById('config-welcome-enabled').checked = config.welcome?.enabled || false;
     document.getElementById('config-welcome-id').value = config.welcome?.channelId || '';
+    document.getElementById('config-welcome-msg').value = config.welcome?.message || '';
+
+    // Auto-role
+    document.getElementById('config-autorole-enabled').checked = config.autoRole?.enabled || false;
+    document.getElementById('config-autorole-id').value = config.autoRole?.roleId || '';
+
+    // Tickets
+    document.getElementById('config-ticket-id').value = config.ticketCategoryId || '';
+
+    // Logs
     document.getElementById('config-logs-id').value = config.logs?.memberJoin || '';
 }
 
 async function saveConfig() {
     const data = {
         welcome: {
-            message: document.getElementById('config-welcome-msg').value,
+            enabled: document.getElementById('config-welcome-enabled').checked,
             channelId: document.getElementById('config-welcome-id').value,
-            enabled: true
+            message: document.getElementById('config-welcome-msg').value
         },
+        autoRole: {
+            enabled: document.getElementById('config-autorole-enabled').checked,
+            roleId: document.getElementById('config-autorole-id').value
+        },
+        ticketCategoryId: document.getElementById('config-ticket-id').value,
         logs: {
             memberJoin: document.getElementById('config-logs-id').value,
             enabled: true
         }
     };
+
     await apiRequest('/api/config', 'POST', data);
-    alert('Configurações salvas!');
+    alert('✅ Configurações salvas com sucesso!');
 }
