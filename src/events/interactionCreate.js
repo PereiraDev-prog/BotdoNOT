@@ -334,7 +334,7 @@ export async function execute(interaction) {
 
             if (createPayment) {
                 try {
-                    const payment = await createPayment(order.id, variation.price, 'pix', interaction.user.id);
+                    const payment = await createPayment(order.id, interaction.user.id, 'pix', variation.price);
 
                     paymentEmbed.addFields(
                         { name: '💠 PIX Copia e Cola', value: `\`\`\`${payment.pixCode}\`\`\`` },
@@ -356,6 +356,7 @@ export async function execute(interaction) {
             }
 
             paymentEmbed.setDescription('Erro ao gerar o PIX. Entre em contato com um administrador.');
+            paymentEmbed.setColor(config.colors.error);
             return interaction.editReply({ embeds: [paymentEmbed] });
         }
     }
