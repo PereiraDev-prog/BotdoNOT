@@ -82,26 +82,21 @@ export async function execute(member) {
         }
 
         // Auto-role
-        const autoRoleConfig = db.config.autoRole || {};
-        console.log(`🛠️ Auto-role config: enabled=${autoRoleConfig.enabled}, roleId=${autoRoleConfig.roleId}`);
+        const autoRoleConfig = db.config.autoRole || { enabled: false };
 
         if (autoRoleConfig.enabled && autoRoleConfig.roleId) {
+            console.log(`🛠️ Auto-role ativado. Tentando dar cargo ${autoRoleConfig.roleId} para ${member.user.tag}...`);
             try {
-                console.log(`🔍 Tentando dar cargo ${autoRoleConfig.roleId} para ${member.user.tag}...`);
                 const role = await member.guild.roles.fetch(autoRoleConfig.roleId);
                 if (role) {
-                    console.log(`✅ Cargo encontrado: ${role.name}. Adicionando...`);
                     await member.roles.add(role);
                     console.log(`✨ Cargo ${role.name} adicionado com sucesso!`);
-                } else {
-                    console.log(`❌ Cargo com ID ${autoRoleConfig.roleId} não encontrado no servidor.`);
                 }
             } catch (error) {
-                console.error(`❌ Erro ao adicionar auto-role: ${error.message} (Code: ${error.code})`);
-                if (error.code === 50013) {
-                    console.error('⚠️ PERMISSÃO NEGADA: O cargo do Bot deve estar ACIMA do cargo a ser dado!');
-                }
+                console.error(`❌ Erro ao adicionar auto-role: ${error.message}`);
             }
+        } else {
+            console.log(`ℹ️ Auto-role desativado ou não configurado. Use /admin-config auto-role para configurar.`);
         }
 
         // Registrar log

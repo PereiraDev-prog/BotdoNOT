@@ -1,4 +1,4 @@
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import { Client, Collection, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { config } from './config.js';
 import fs from 'fs';
 import path from 'path';
@@ -51,7 +51,22 @@ for (const file of eventFiles) {
 // Login
 import { startDashboard } from './services/dashboard.js';
 
-client.login(config.token).then(() => {
+client.login(config.token).then(async () => {
+    // Registrar comandos automaticamente
+    try {
+        const rest = new REST().setToken(config.token);
+        const commandData = Array.from(client.commands.values()).map(c => c.data.toJSON());
+
+        console.log(`🔄 Registrando ${commandData.length} comandos...`);
+        await rest.put(
+            Routes.applicationGuildCommands(config.clientId, config.guildId),
+            { body: commandData }
+        );
+        console.log('✅ Comandos registrados com sucesso!');
+    } catch (error) {
+        console.error('❌ Erro ao registrar comandos:', error);
+    }
+
     // Iniciar Dashboard
     startDashboard(client);
 });
