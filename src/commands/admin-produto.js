@@ -32,6 +32,16 @@ export const data = new SlashCommandBuilder()
                     .setMinValue(0)
                     .setRequired(true)
             )
+            .addStringOption(option =>
+                option.setName('conteudo')
+                    .setDescription('Conteúdo a ser entregue (Ex: link, chave)')
+                    .setRequired(false)
+            )
+            .addRoleOption(option =>
+                option.setName('cargo')
+                    .setDescription('Cargo a ser dado após a compra')
+                    .setRequired(false)
+            )
     )
     .addSubcommand(subcommand =>
         subcommand
@@ -64,6 +74,16 @@ export const data = new SlashCommandBuilder()
                     .setMinValue(0)
                     .setRequired(false)
             )
+            .addStringOption(option =>
+                option.setName('conteudo')
+                    .setDescription('Novo conteúdo')
+                    .setRequired(false)
+            )
+            .addRoleOption(option =>
+                option.setName('cargo')
+                    .setDescription('Novo cargo')
+                    .setRequired(false)
+            )
     )
     .addSubcommand(subcommand =>
         subcommand
@@ -89,8 +109,17 @@ export async function execute(interaction) {
         const description = interaction.options.getString('descricao');
         const price = interaction.options.getNumber('preco');
         const stock = interaction.options.getInteger('estoque');
+        const contentStr = interaction.options.getString('conteudo');
+        const role = interaction.options.getRole('cargo');
 
-        const product = db.addProduct({ name, description, price, stock });
+        const product = db.addProduct({
+            name,
+            description,
+            price,
+            stock,
+            content: contentStr,
+            roleId: role?.id
+        });
 
         const embed = new EmbedBuilder()
             .setTitle(`${config.emojis.check} Produto Adicionado`)
@@ -104,6 +133,9 @@ export async function execute(interaction) {
             .setColor(config.colors.success)
             .setTimestamp();
 
+        if (product.content) embed.addFields({ name: 'Conteúdo', value: '✅ Configurado', inline: true });
+        if (product.roleId) embed.addFields({ name: 'Cargo', value: `<@&${product.roleId}>`, inline: true });
+
         return interaction.reply({ embeds: [embed] });
     }
 
@@ -115,11 +147,15 @@ export async function execute(interaction) {
         const description = interaction.options.getString('descricao');
         const price = interaction.options.getNumber('preco');
         const stock = interaction.options.getInteger('estoque');
+        const contentStr = interaction.options.getString('conteudo');
+        const role = interaction.options.getRole('cargo');
 
         if (name) updates.name = name;
         if (description) updates.description = description;
         if (price) updates.price = price;
         if (stock !== null) updates.stock = stock;
+        if (contentStr) updates.content = contentStr;
+        if (role) updates.roleId = role.id;
 
         const product = db.updateProduct(id, updates);
 
@@ -140,6 +176,9 @@ export async function execute(interaction) {
             )
             .setColor(config.colors.success)
             .setTimestamp();
+
+        if (product.content) embed.addFields({ name: 'Conteúdo', value: '✅ Atualizado', inline: true });
+        if (product.roleId) embed.addFields({ name: 'Cargo', value: `<@&${product.roleId}>`, inline: true });
 
         return interaction.reply({ embeds: [embed] });
     }

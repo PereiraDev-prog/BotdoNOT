@@ -164,7 +164,9 @@ class Database {
                 name: product.name,
                 price: product.price,
                 quantity: item.quantity,
-                subtotal: product.price * item.quantity
+                subtotal: product.price * item.quantity,
+                content: product.content || null,
+                roleId: product.roleId || null
             };
         });
 

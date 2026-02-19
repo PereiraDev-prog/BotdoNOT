@@ -47,10 +47,43 @@ app.post('/webhooks/mercadopago', async (req, res) => {
 
                     await user.send({ embeds: [embed] });
 
-                    // Aqui você pode adicionar a lógica de entrega automática (ex: enviar chave, cargo, etc)
-                    console.log(`📦 Produto entregue para ${user.tag} (Pedido #${payment.orderId})`);
+                    // Entrega automática de conteúdo e cargos
+                    try {
+                        const guild = await discordClient.guilds.fetch(config.guildId);
+                        const member = await guild.members.fetch(payment.userId).catch(() => null);
+
+                        for (const item of order.items) {
+                            // Entregar conteúdo (Link, Key, etc) via DM
+                            if (item.content) {
+                                try {
+                                    await user.send({
+                                        content: `📦 **Seu produto: ${item.name}**\nConteúdo: ${item.content}`
+                                    });
+                                } catch (e) {
+                                    console.error(`Erro ao entregar conteúdo para ${user.tag}:`, e);
+                                }
+                            }
+
+                            // Entregar Cargo
+                            if (item.roleId && member) {
+                                try {
+                                    const role = await guild.roles.fetch(item.roleId);
+                                    if (role) {
+                                        await member.roles.add(role);
+                                        console.log(`✅ Cargo ${role.name} adicionado para ${member.user.tag}`);
+                                    }
+                                } catch (e) {
+                                    console.error(`Erro ao adicionar cargo ${item.roleId} para ${member.user.tag}:`, e);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Erro ao buscar guilda ou membro para entrega:', e);
+                    }
+
+                    console.log(`📦 Pedido #${payment.orderId} processado e entregue para ${user.tag}`);
                 } catch (error) {
-                    console.error('Erro ao notificar usuário sobre pagamento:', error);
+                    console.error('Erro ao processar entrega do pagamento:', error);
                 }
             }
         }
