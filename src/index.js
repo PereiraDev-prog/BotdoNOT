@@ -48,9 +48,11 @@ for (const file of eventFiles) {
     console.log(`✅ Evento carregado: ${event.name}`);
 }
 
-// Login
+// Iniciar Dashboard
 import { startDashboard } from './services/dashboard.js';
+startDashboard(client);
 
+// Login
 client.login(config.token).then(async () => {
     // Registrar comandos automaticamente
     try {
@@ -66,7 +68,4 @@ client.login(config.token).then(async () => {
     } catch (error) {
         console.error('❌ Erro ao registrar comandos:', error);
     }
-
-    // Iniciar Dashboard
-    startDashboard(client);
 });

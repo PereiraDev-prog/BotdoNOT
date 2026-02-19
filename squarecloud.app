@@ -4,3 +4,5 @@ MEMORY=1024
 VERSION=recommended
 DESCRIPTION=Bot de Loja Discord
 AUTORESTART=true
+SUBDOMAIN=not
+START=npm start
