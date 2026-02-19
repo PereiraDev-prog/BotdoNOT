@@ -30,15 +30,15 @@ export const data = new SlashCommandBuilder()
                     .setDescription('Canal de mensagens')
                     .setRequired(true)
             )
-            .addStringOption(option =>
-                option.setName('mensagem')
-                    .setDescription('Mensagem (Use {user} e {server})')
-                    .setRequired(false)
-            )
             .addBooleanOption(option =>
                 option.setName('ativado')
                     .setDescription('Ativar ou desativar')
                     .setRequired(true)
+            )
+            .addStringOption(option =>
+                option.setName('mensagem')
+                    .setDescription('Mensagem (Use {user} e {server})')
+                    .setRequired(false)
             )
     )
     .addSubcommand(subcommand =>
