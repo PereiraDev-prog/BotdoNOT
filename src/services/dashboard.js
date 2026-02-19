@@ -85,6 +85,51 @@ app.post('/webhooks/mercadopago', async (req, res) => {
                     }
 
                     console.log(`📦 Pedido #${payment.orderId} processado e entregue para ${user.tag}`);
+
+                    // Notificação de Venda (Log de Vendas)
+                    try {
+                        const salesChannelId = db.config.logs?.salesLogChannelId;
+                        if (salesChannelId) {
+                            const salesChannel = await discordClient.channels.fetch(salesChannelId).catch(() => null);
+                            if (salesChannel) {
+                                const salesEmbed = new EmbedBuilder()
+                                    .setAuthor({
+                                        name: `${user.username}`,
+                                        iconURL: user.displayAvatarURL({ dynamic: true })
+                                    })
+                                    .setTitle('✅ Compra Realizada')
+                                    .setDescription('**Carrinho**')
+                                    .addFields(
+                                        {
+                                            name: '\u200B',
+                                            value: order.items.map(item => `📦 **${item.quantity}x ${item.name.toUpperCase()}** - \`R$ ${item.price.toFixed(2)}\``).join('\n')
+                                        },
+                                        {
+                                            name: 'Valor pago',
+                                            value: `**R$ ${payment.amount.toFixed(2)}**`,
+                                            inline: false
+                                        }
+                                    )
+                                    .setColor('#2ecc71') // Green like in the image
+                                    .setFooter({
+                                        text: `${interaction.guild?.name || 'Kronik Store'}`, // Fallback for guild name
+                                        iconURL: interaction.guild?.iconURL()
+                                    })
+                                    .setTimestamp();
+
+                                // Since we are in an async webhook, interaction might not be defined. 
+                                // Let's use discordClient to find the guild first for better footer.
+                                const guild = await discordClient.guilds.fetch(config.guildId).catch(() => null);
+                                if (guild) {
+                                    salesEmbed.setFooter({ text: `${guild.name}`, iconURL: guild.iconURL() });
+                                }
+
+                                await salesChannel.send({ embeds: [salesEmbed] });
+                            }
+                        }
+                    } catch (salesLogError) {
+                        console.error('Erro ao enviar log de venda:', salesLogError);
+                    }
                 } catch (error) {
                     console.error('Erro ao processar entrega do pagamento:', error);
                 }

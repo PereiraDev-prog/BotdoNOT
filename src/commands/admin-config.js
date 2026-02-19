@@ -50,6 +50,21 @@ export const data = new SlashCommandBuilder()
                     .setDescription('Categoria onde os tickets serão abertos')
                     .setRequired(true)
             )
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('vendas-logs')
+            .setDescription('Configurar canal de logs de vendas')
+            .addChannelOption(option =>
+                option.setName('canal')
+                    .setDescription('Canal para enviar notificações de venda')
+                    .setRequired(true)
+            )
+            .addBooleanOption(option =>
+                option.setName('ativado')
+                    .setDescription('Ativar ou desativar')
+                    .setRequired(true)
+            )
     );
 
 export async function execute(interaction) {
@@ -104,6 +119,24 @@ export async function execute(interaction) {
         const embed = new EmbedBuilder()
             .setTitle('⚙️ Configuração Atualizada')
             .setDescription(`**Categoria de Tickets:** <#${category.id}>`)
+            .setColor(config.colors.success)
+            .setTimestamp();
+
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    if (subcommand === 'vendas-logs') {
+        const channel = interaction.options.getChannel('canal');
+        const enabled = interaction.options.getBoolean('ativado');
+
+        if (!db.config.logs) db.config.logs = {};
+
+        db.config.logs.salesLogChannelId = enabled ? channel.id : "";
+        await db.save();
+
+        const embed = new EmbedBuilder()
+            .setTitle('⚙️ Configuração Atualizada')
+            .setDescription(`**Logs de Vendas:** ${enabled ? 'Ativado' : 'Desativado'}\n**Canal:** <#${channel.id}>`)
             .setColor(config.colors.success)
             .setTimestamp();
 
