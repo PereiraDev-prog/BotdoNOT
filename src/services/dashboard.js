@@ -159,10 +159,16 @@ app.get('/api/config', auth, (req, res) => {
     res.json(db.config);
 });
 
-app.post('/api/config', auth, (req, res) => {
-    db.config = { ...db.config, ...req.body };
-    db.save();
-    res.json(db.config);
+app.post('/api/config', auth, async (req, res) => {
+    try {
+        db.config = { ...db.config, ...req.body };
+        await db.save();
+        console.log('✅ Configurações salvas via Dashboard');
+        res.json(db.config);
+    } catch (error) {
+        console.error('❌ Erro ao salvar configurações:', error);
+        res.status(500).json({ error: 'Erro ao salvar' });
+    }
 });
 
 app.post('/api/login', (req, res) => {

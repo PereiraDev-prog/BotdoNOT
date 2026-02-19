@@ -224,6 +224,11 @@ async function saveConfig() {
         }
     };
 
-    await apiRequest('/api/config', 'POST', data);
-    alert('✅ Configurações salvas com sucesso!');
+    console.log('📤 Enviando configurações:', data);
+
+    const response = await apiRequest('/api/config', 'POST', data);
+    if (response) {
+        alert('✅ Configurações salvas com sucesso!');
+        await loadConfig(); // Recarregar para confirmar
+    }
 }
