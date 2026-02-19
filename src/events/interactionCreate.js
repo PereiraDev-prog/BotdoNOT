@@ -88,15 +88,28 @@ export async function execute(interaction) {
             // Enviar transcript
             try {
                 const user = await interaction.client.users.fetch(ticket.userId);
+
+                const dmEmbed = new EmbedBuilder()
+                    .setTitle(`🎫 Ticket Encerrado`)
+                    .setDescription(`Olá **${ticket.username}**, seu atendimento foi finalizado.`)
+                    .addFields(
+                        { name: '🆔 ID do Ticket', value: `#${ticketId}`, inline: true },
+                        { name: '📁 Categoria', value: ticket.category, inline: true },
+                        { name: '🔒 Fechado por', value: ticket.closedBy || 'Sistema', inline: true }
+                    )
+                    .setColor(config.colors.info)
+                    .setFooter({ text: 'Obrigado por utilizar nossos serviços!' })
+                    .setTimestamp();
+
                 await user.send({
-                    content: `Seu ticket #${ticketId} foi fechado. Aqui está o histórico:`,
+                    embeds: [dmEmbed],
                     files: [{
                         attachment: Buffer.from(transcript, 'utf-8'),
-                        name: `ticket-${ticketId}-transcript.txt`
+                        name: `historico-ticket-${ticketId}.txt`
                     }]
                 });
             } catch (error) {
-                console.log('Não foi possível enviar transcript');
+                console.log('Não foi possível enviar transcript via DM (DMs desativadas)');
             }
 
             // Deletar canal

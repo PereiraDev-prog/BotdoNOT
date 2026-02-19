@@ -36,13 +36,16 @@ app.post('/webhooks/mercadopago', async (req, res) => {
                     const order = db.getOrder(payment.orderId);
 
                     const embed = new EmbedBuilder()
-                        .setTitle('✅ Pagamento Confirmado!')
-                        .setDescription(`Seu pagamento para o pedido **#${payment.orderId}** foi aprovado!`)
+                        .setTitle('✨ Pagamento Confirmado!')
+                        .setDescription(`Olá! Seu pagamento para o pedido **#${payment.orderId}** foi aprovado com sucesso.`)
                         .addFields(
-                            { name: 'Valor', value: `R$ ${payment.amount.toFixed(2)}`, inline: true },
-                            { name: 'Itens', value: order.items.map(i => `• ${i.name} x${i.quantity}`).join('\n') }
+                            { name: '💰 Valor Pago', value: `\`R$ ${payment.amount.toFixed(2)}\``, inline: true },
+                            { name: '💳 Método', value: payment.method === 'pix' ? 'Pix' : 'Cartão', inline: true },
+                            { name: '📦 Itens do Pedido', value: order.items.map(i => `> • **${i.name}** (x${i.quantity})`).join('\n') }
                         )
                         .setColor(config.colors.success)
+                        .setThumbnail('https://cdn-icons-png.flaticon.com/512/438/438526.png') // Success icon
+                        .setFooter({ text: 'Sua entrega está sendo processada...' })
                         .setTimestamp();
 
                     await user.send({ embeds: [embed] });

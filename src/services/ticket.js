@@ -75,16 +75,26 @@ export const generateTranscript = (ticketId) => {
     const ticket = db.tickets.find(t => t.id === ticketId);
     if (!ticket) return null;
 
-    let transcript = `=== TICKET #${ticket.id} ===\n`;
-    transcript += `Usuário: ${ticket.username}\n`;
-    transcript += `Categoria: ${ticket.category}\n`;
-    transcript += `Criado em: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}\n`;
-    transcript += `Fechado em: ${ticket.closedAt ? new Date(ticket.closedAt).toLocaleString('pt-BR') : 'N/A'}\n\n`;
-    transcript += `=== MENSAGENS ===\n\n`;
+    let transcript = `╔════════════════════════════════════════════════════╗\n`;
+    transcript += `║             HISTÓRICO DO TICKET #${ticket.id.toString().padStart(3, '0')}           ║\n`;
+    transcript += `╠════════════════════════════════════════════════════╣\n`;
+    transcript += `║ Usuário: ${ticket.username.padEnd(42)}║\n`;
+    transcript += `║ Categoria: ${ticket.category.padEnd(40)}║\n`;
+    transcript += `║ Criado em: ${new Date(ticket.createdAt).toLocaleString('pt-BR').padEnd(40)}║\n`;
+    if (ticket.closedAt) {
+        transcript += `║ Fechado em: ${new Date(ticket.closedAt).toLocaleString('pt-BR').padEnd(39)}║\n`;
+        transcript += `║ Fechado por: ${ticket.closedBy.padEnd(38)}║\n`;
+    }
+    transcript += `╠════════════════════════════════════════════════════╣\n`;
+    transcript += `║                   MENSAGENS                        ║\n`;
+    transcript += `╚════════════════════════════════════════════════════╝\n\n`;
 
     ticket.messages.forEach(msg => {
-        transcript += `[${new Date(msg.timestamp).toLocaleString('pt-BR')}] ${msg.author}: ${msg.content}\n`;
+        const time = new Date(msg.timestamp).toLocaleString('pt-BR');
+        transcript += `[${time}] ${msg.author}:\n> ${msg.content}\n\n`;
     });
+
+    transcript += `\n--- Fim do histórico do Ticket #${ticket.id} ---`;
 
     return transcript;
 };
