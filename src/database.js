@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,16 +21,18 @@ class Database {
         this.init();
     }
 
-    async init() {
+    init() {
         try {
-            await fs.mkdir(DATA_DIR, { recursive: true });
-            await this.load();
+            if (!fs.existsSync(DATA_DIR)) {
+                fs.mkdirSync(DATA_DIR, { recursive: true });
+            }
+            this.load();
         } catch (error) {
             console.error('Erro ao inicializar database:', error);
         }
     }
 
-    async load() {
+    load() {
         const files = {
             products: 'products.json',
             orders: 'orders.json',
@@ -46,8 +48,13 @@ class Database {
 
         for (const [key, filename] of Object.entries(files)) {
             try {
-                const data = await fs.readFile(path.join(DATA_DIR, filename), 'utf-8');
-                this[key] = JSON.parse(data);
+                const filePath = path.join(DATA_DIR, filename);
+                if (fs.existsSync(filePath)) {
+                    const data = fs.readFileSync(filePath, 'utf-8');
+                    this[key] = JSON.parse(data);
+                } else {
+                    this[key] = key === 'config' ? {} : [];
+                }
             } catch {
                 this[key] = key === 'config' ? {} : [];
             }
@@ -69,10 +76,14 @@ class Database {
         };
 
         for (const [key, value] of Object.entries(data)) {
-            await fs.writeFile(
-                path.join(DATA_DIR, `${key}.json`),
-                JSON.stringify(value, null, 2)
-            );
+            try {
+                await fs.promises.writeFile(
+                    path.join(DATA_DIR, `${key}.json`),
+                    JSON.stringify(value, null, 2)
+                );
+            } catch (error) {
+                console.error(`Erro ao salvar ${key}:`, error);
+            }
         }
     }
 
