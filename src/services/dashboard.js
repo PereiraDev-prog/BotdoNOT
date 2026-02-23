@@ -226,10 +226,10 @@ app.post('/api/post-rules', auth, async (req, res) => {
         if (!channel) return res.status(404).json({ error: 'Canal não encontrado' });
 
         const embed = new EmbedBuilder()
-            .setTitle('⚖️ Regras da Kronik Store')
+            .setTitle('⚖️ Regras da Not Store')
             .setDescription(text)
             .setColor(config.colors.primary)
-            .setFooter({ text: 'Kronik Store - Todos os direitos reservados' })
+            .setFooter({ text: 'Not Store - Todos os direitos reservados' })
             .setTimestamp();
 
         await channel.send({ embeds: [embed] });
