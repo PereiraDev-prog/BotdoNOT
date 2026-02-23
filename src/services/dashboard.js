@@ -219,6 +219,27 @@ app.post('/api/config', auth, async (req, res) => {
     }
 });
 
+app.post('/api/post-rules', auth, async (req, res) => {
+    try {
+        const { channelId, text } = req.body;
+        const channel = await discordClient.channels.fetch(channelId);
+        if (!channel) return res.status(404).json({ error: 'Canal não encontrado' });
+
+        const embed = new EmbedBuilder()
+            .setTitle('⚖️ Regras da Kronik Store')
+            .setDescription(text)
+            .setColor(config.colors.primary)
+            .setFooter({ text: 'Kronik Store - Todos os direitos reservados' })
+            .setTimestamp();
+
+        await channel.send({ embeds: [embed] });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Erro ao postar regras:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
     if (password === PASSWORD) {

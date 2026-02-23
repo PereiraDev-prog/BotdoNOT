@@ -204,6 +204,10 @@ async function loadConfig() {
 
     // Logs
     document.getElementById('config-logs-id').value = config.logs?.memberJoin || '';
+
+    // Rules
+    document.getElementById('config-rules-id').value = config.rules?.channelId || '';
+    document.getElementById('config-rules-text').value = config.rules?.text || '';
 }
 
 async function saveConfig() {
@@ -221,6 +225,10 @@ async function saveConfig() {
         logs: {
             memberJoin: document.getElementById('config-logs-id').value,
             enabled: true
+        },
+        rules: {
+            channelId: document.getElementById('config-rules-id').value,
+            text: document.getElementById('config-rules-text').value
         }
     };
 
@@ -230,5 +238,23 @@ async function saveConfig() {
     if (response) {
         alert('✅ Configurações salvas com sucesso!');
         await loadConfig(); // Recarregar para confirmar
+    }
+}
+
+async function postRules() {
+    const channelId = document.getElementById('config-rules-id').value;
+    const text = document.getElementById('config-rules-text').value;
+
+    if (!channelId || !text) {
+        return alert('⚠️ Preencha o ID do canal e o texto das regras!');
+    }
+
+    if (confirm('Deseja postar as regras no Discord agora?')) {
+        const response = await apiRequest('/api/post-rules', 'POST', { channelId, text });
+        if (response.success) {
+            alert('✅ Regras postadas com sucesso!');
+        } else {
+            alert('❌ Erro ao postar regras: ' + (response.error || 'Erro desconhecido'));
+        }
     }
 }
