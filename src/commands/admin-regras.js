@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
     const rulesText = `
 Regras
-Bem-vindo(a) à comunidade Kronik Store! Para garantir uma boa convivência e uma experiência justa para todos, pedimos que siga atentamente as regras abaixo:
+Bem-vindo(a) à comunidade Not Store! Para garantir uma boa convivência e uma experiência justa para todos, pedimos que siga atentamente as regras abaixo:
 
 ⚠️ **1. Divulgação**
 Não é permitido divulgar outros servidores, lojas, sites ou serviços sem autorização da equipe.
@@ -52,10 +52,10 @@ Nosso objetivo é manter um ambiente seguro e organizado.
 `;
 
     const embed = new EmbedBuilder()
-        .setTitle('⚖️ Regras da Kronik Store')
+        .setTitle('⚖️ Regras da Not Store')
         .setDescription(rulesText)
-        .setColor(config.colors.primary)
-        .setFooter({ text: 'Kronik Store - Todos os direitos reservados' })
+        .setColor(config.colors.white)
+        .setFooter({ text: 'Not Store - Todos os direitos reservados' })
         .setTimestamp();
 
     await interaction.channel.send({ embeds: [embed] });

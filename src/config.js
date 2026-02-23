@@ -15,7 +15,8 @@ export const config = {
         success: 0x57F287,
         warning: 0xFEE75C,
         error: 0xED4245,
-        info: 0x5865F2
+        info: 0x5865F2,
+        white: 0xFFFFFF
     },
 
     // Emojis

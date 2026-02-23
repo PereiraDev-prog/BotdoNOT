@@ -228,7 +228,7 @@ app.post('/api/post-rules', auth, async (req, res) => {
         const embed = new EmbedBuilder()
             .setTitle('⚖️ Regras da Not Store')
             .setDescription(text)
-            .setColor(config.colors.primary)
+            .setColor(config.colors.white)
             .setFooter({ text: 'Not Store - Todos os direitos reservados' })
             .setTimestamp();
 
